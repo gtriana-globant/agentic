@@ -4,9 +4,11 @@ from mcp import ClientSession
 from mcp.client.sse import sse_client
 
 class MCPInterface:
-    #def __init__(self, url="http://127.0.0.1:8000/sse"):
-    def __init__(self, url="https://mcp-at-app1.happywave-896983da.eastus.azurecontainerapps.io/sse"):
-        self.url = url
+    def __init__(self):
+        self.url = os.getenv(
+            "MCP_SERVER_URL", 
+            "http://127.0.0.1:8000/sse"
+        )
         self.session = None
 
     async def fetch_docs(self, query: str):
