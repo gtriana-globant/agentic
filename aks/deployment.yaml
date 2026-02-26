@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-search-server
+  labels:
+    app: mcp-search
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-search
+  template:
+    metadata:
+      labels:
+        app: mcp-search
+    spec:
+      containers:
+      - name: mcp-server
+        image: <YOUR_ACR_REGISTRY>.azurecr.io/mcp-search:v1
+        ports:
+        - containerPort: 8000
+        env:
+        - name: AZURE_SEARCH_ENDPOINT
+          value: "https://ai-search-poc-andres.search.windows.net"
+        - name: AZURE_SEARCH_INDEX
+          value: "rag-poc"
+        # If using Workload Identity, no extra env vars needed.
+        # If using Service Principal, uncomment below:
+        # - name: AZURE_CLIENT_ID
+        #   value: "..."
+        # - name: AZURE_CLIENT_SECRET
+        #   value: "..."
+        # - name: AZURE_TENANT_ID
+        #   value: "..."
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-search-service
+spec:
+  selector:
+    app: mcp-search
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP
