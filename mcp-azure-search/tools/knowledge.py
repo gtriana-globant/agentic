@@ -2,6 +2,7 @@
 from typing import Dict, Any, Optional
 from services.search_client import perform_vector_search
 from core.logger import get_logger
+from core.config import settings
 
 logger = get_logger(__name__)
 
@@ -15,17 +16,19 @@ async def query_knowledge_base(query: str, index_name: Optional[str] = None) -> 
         index_name (str, optional): Target index. Defaults to the environment variable.
     """
     try:
-        logger.info(f"Tool 'query_knowledge_base' invoked with query: '{query}'")
+        actual_index = index_name or settings.azure_search_index
         
+        logger.info(f"Tool 'query_knowledge_base' invoked for index '{actual_index}' with query: '{query}'")
+
         # Call the decoupled service layer
-        documents = perform_vector_search(query=query, index_name=index_name)
+        documents = perform_vector_search(query=query, index_name=actual_index)
         
         # Build the standardized JSON response
         return {
             "status": "success",
             "query_info": {
                 "original_query": query,
-                "target_index": index_name,
+                "target_index": actual_index,
                 "results_count": len(documents)
             },
             "documents": documents,
