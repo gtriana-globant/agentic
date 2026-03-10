@@ -1,4 +1,3 @@
-# Original
 # --- STAGE 1: Build Stage ---
 FROM python:3.11-slim AS builder
 
@@ -24,20 +23,29 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# Set runtime environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+# Ensure the app can find the modules in the current directory
+ENV PYTHONPATH=/app 
+
 # Copy only the installed packages from the builder stage
 COPY --from=builder /install /usr/local
-# Copy the application source code
+
+# Copy the application source code (core, services, tools, main.py)
+# This will copy your new folder structure: /app/core, /app/services, etc.
 COPY . .
 
 # --- SECURITY BEST PRACTICES ---
-# Create a non-root user to run the process (defense in depth)
-RUN adduser --disabled-password --gecos "" appuser
+# Create a non-root user for security (required for many AKS policies)
+RUN adduser --disabled-password --gecos "" appuser && \
+    chown -R appuser:appuser /app
+
 USER appuser
 
-# Expose the port used by FastMCP (usually 8000 in server mode)
+# Expose the FastMCP SSE port
 EXPOSE 8000
-RUN ls -l
 
-# Execution Command
-# Ensure your script is named 'main.py' or update accordingly
-CMD ["python", "server.py"]
+# --- EXECUTION ---
+# Updated to point to main.py instead of server.py
+CMD ["python", "main.py"]
